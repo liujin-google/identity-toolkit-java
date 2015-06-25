@@ -1,5 +1,7 @@
 This is Java client library for Google Identity Toolkit services.
 
+To build a local client jar, run 'mvn package'.
+
 Sample usage
 =====================
 /*
@@ -21,3 +23,8 @@ Iterator<GitkitUser> userIterator = gitkitClient.getAllUsers();
 while (userIterator.hasNext()) {
   // individual user info is returned in userIterator.next()
 }
+
+// Verifies the access token from Token Service
+JsonObject jsonToken = gitkitClient.validateTokenServiceToJson(testToken);
+// You can also get the Gitkit user from the Token Service
+GitkitUser user = testClient.validateTokenServiceUser(testToken);
