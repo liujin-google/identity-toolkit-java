@@ -57,7 +57,8 @@ public class GitkitClient {
       "https://www.googleapis.com/identitytoolkit/v3/relyingparty/";
 
   private static final Logger logger = Logger.getLogger(GitkitClient.class.getName());
-  private final JsonTokenHelper tokenHelper;
+  private final GitkitTokenHelper gitkitTokenHelper;
+  private final TokenServiceHelper tokenServiceHelper;
   private final RpcHelper rpcHelper;
   private final String widgetUrl;
   private final String cookieName;
@@ -83,7 +84,8 @@ public class GitkitClient {
       HttpSender httpSender,
       String serverApiKey) {
     rpcHelper = new RpcHelper(httpSender, GITKIT_API_BASE, serviceAccountEmail, keyStream);
-    tokenHelper = new JsonTokenHelper(clientId, rpcHelper, serverApiKey);
+    gitkitTokenHelper = new GitkitTokenHelper(clientId, rpcHelper, serverApiKey);
+    tokenServiceHelper = new TokenServiceHelper(clientId, rpcHelper);
     this.widgetUrl = widgetUrl;
     this.cookieName = cookieName;
   }
@@ -123,7 +125,7 @@ public class GitkitClient {
       return null;
     }
     try {
-      return tokenHelper.verifyAndDeserialize(token).getPayloadAsJsonObject();
+      return gitkitTokenHelper.verifyAndDeserialize(token).getPayloadAsJsonObject();
     } catch (SignatureException e) {
       throw new GitkitClientException(e);
     }
@@ -142,10 +144,10 @@ public class GitkitClient {
       return null;
     }
     return new GitkitUser()
-        .setLocalId(jsonToken.get(JsonTokenHelper.ID_TOKEN_USER_ID).getAsString())
-        .setEmail(jsonToken.get(JsonTokenHelper.ID_TOKEN_EMAIL).getAsString())
-        .setCurrentProvider(jsonToken.has(JsonTokenHelper.ID_TOKEN_PROVIDER)
-            ? jsonToken.get(JsonTokenHelper.ID_TOKEN_PROVIDER).getAsString()
+        .setLocalId(jsonToken.get(GitkitTokenHelper.ID_TOKEN_USER_ID).getAsString())
+        .setEmail(jsonToken.get(GitkitTokenHelper.ID_TOKEN_EMAIL).getAsString())
+        .setCurrentProvider(jsonToken.has(GitkitTokenHelper.ID_TOKEN_PROVIDER)
+            ? jsonToken.get(GitkitTokenHelper.ID_TOKEN_PROVIDER).getAsString()
             : null);
   }
 
@@ -169,6 +171,29 @@ public class GitkitClient {
       }
     }
     return null;
+  }
+
+  public JsonObject validateTokenServiceToJson(String token) throws GitkitClientException {
+    try {
+      return tokenServiceHelper.verifyAndDeserialize(token).getPayloadAsJsonObject();
+    } catch (SignatureException e) {
+      throw new GitkitClientException(e);
+    }
+  }
+
+  public GitkitUser validateTokenServiceUser(String token) throws GitkitClientException {
+    try {
+      JsonObject jsonToken =
+          tokenServiceHelper.verifyAndDeserialize(token).getPayloadAsJsonObject();
+      if (jsonToken == null) {
+        return null;
+      }
+      return new GitkitUser()
+          .setLocalId(jsonToken.get(TokenServiceHelper.ID_TOKEN_USER_ID).getAsString())
+          .setEmail(jsonToken.get(TokenServiceHelper.ID_TOKEN_EMAIL).getAsString());
+    } catch (SignatureException e) {
+      throw new GitkitClientException(e);
+    }
   }
 
   /**

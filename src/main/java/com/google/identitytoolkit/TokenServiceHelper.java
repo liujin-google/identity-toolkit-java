@@ -27,22 +27,24 @@ import net.oauth.jsontoken.discovery.VerifierProviders;
 import java.security.SignatureException;
 
 /**
- * Helps to find a JWT verifier.
+ * Helper to verify the access token from Token Service.
  */
-public class JsonTokenHelper {
+public class TokenServiceHelper {
   public static final String ID_TOKEN_EMAIL = "email";
   public static final String ID_TOKEN_USER_ID = "user_id";
-  public static final String ID_TOKEN_PROVIDER = "provider_id";
+  public static final String SUB_FIELD = "sub";
   private final JsonTokenParser parser;
 
-  public JsonTokenHelper(String audience, RpcHelper rpcHelper, String serverApiKey) {
+  public TokenServiceHelper(String audience, RpcHelper rpcHelper) {
+    super();
     VerifierProviders verifierProviders = new VerifierProviders();
     verifierProviders.setVerifierProvider(SignatureAlgorithm.RS256,
-        new GitkitVerifierManager(rpcHelper, serverApiKey));
+        new TokenServiceVerifierManager(rpcHelper));
     parser = new JsonTokenParser(verifierProviders, new AudienceChecker(audience));
   }
 
-  public JsonToken verifyAndDeserialize(String token) throws SignatureException {
+  public JsonToken verifyAndDeserialize(String token)
+      throws SignatureException {
     return parser.verifyAndDeserialize(token);
   }
 
@@ -59,13 +61,13 @@ public class JsonTokenHelper {
 
     @Override
     public void check(JsonObject payload) throws SignatureException {
-      if (!payload.has(JsonToken.AUDIENCE)) {
-        throw new SignatureException("No audience in payload.");
+      if (!payload.has(SUB_FIELD)) {
+        throw new SignatureException("No sub field in payload.");
       }
-      String audience = payload.get(JsonToken.AUDIENCE).getAsString();
-      if (!expectedAudience.equals(audience)) {
+      String subject = payload.get(SUB_FIELD).getAsString();
+      if (!expectedAudience.split("[-\\.]")[0].equals(subject.split("[-@]")[0])) {
         throw new SignatureException(String.format(
-            "Invalid audience: %s. Should be: %s", audience, expectedAudience));
+            "Subject prefix mismatch: %s. Should start with: %s", subject, expectedAudience));
       }
     }
   }

@@ -223,6 +223,12 @@ public class RpcHelper {
     return httpSender.get(certUrl, headers);
   }
 
+  public String downloadTokenServiceCerts() throws IOException {
+    return httpSender.get(
+        "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com",
+        Maps.<String, String>newHashMap());
+  }
+
   @VisibleForTesting
   JSONObject invokeGoogle2LegOauthApi(String method, JSONObject req)
       throws GitkitClientException, GitkitServerException {

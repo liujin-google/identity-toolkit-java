@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
+import com.google.gson.JsonObject;
 
 import junit.framework.TestCase;
 
@@ -64,6 +65,19 @@ public class GitkitClientTest extends TestCase {
         .setHttpSender(mockSender)
         .setWidgetUrl("http://example.com:80/gitkit")
         .build();
+  }
+
+  public void testVerifyTokenServiceToJson() throws Exception {
+    GitkitClient testClient = new GitkitClient.Builder()
+        .setKeyStream(new ByteArrayInputStream(TestConfig.getP12Key()))
+        .setServiceAccountEmail("dev@developer.gserviceaccount.com")
+        .setGoogleClientId("924226504183-abcd.apps.googleusercontent.com")
+        .build();
+    String testToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFlYThlOTkwNmUzNzE5ZjJiM2JmNDMxNTdiMjJiMjNjZDVmNzM1Y2MifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20iLCJzdWIiOiI5MjQyMjY1MDQxODMtZms1bjk1ZWJnMDM2dWJiYjZxM3NmaHVmYTNhbDdibmtAZGV2ZWxvcGVyLmdzZXJ2aWNlYWNjb3VudC5jb20hMTIzNCIsImVtYWlsIjoiMTIzNEBleGFtcGxlLmNvbSIsImF1ZCI6Imh0dHBzOi8vZXhhbXBsZS5jb20vYXBpIiwiaWF0IjoxNDM1MTg5MTc5LCJleHAiOjE0MzUxOTI3NzksInVzZXJfaWQiOiIxMjM0In0.o2KW4ZdBBayHu4tyMSIjjvm2g0viBDTRHRczTub9YITbHYyPGUEML2TxMQdmD7J3U5aMVj36rDzYf4ItJ2hywLEIgMA3EicAK3_UrfwKdPFMUDNyDT7Hwj_7omdy2dtsTT7xm2adKleDo2bJ-7wC221j0Kw9KuZI5o7rBmwn5yYgjE9HOjSjdCXHtXUOzjJwUujY0OW96ZkQL1GQb2cDRnbIMF8d0CahHNhb4e7SCZnE3GmjmRUR7uavrHcfQvvjZQ6Ti3f1iwvpZ5shH8DAQoL1HkQjJciDtJD8p2qP1cw1aG8ox7sMftXvC2Alk9o2GsPYNcKaU5BlFTkeGrP-kA";
+    JsonObject jsonToken = testClient.validateTokenServiceToJson(testToken);
+    System.out.println("raw token: " + jsonToken);
+    GitkitUser user = testClient.validateTokenServiceUser(testToken);
+    System.out.println("user info: " + user.toString());
   }
 
   public void testGetAccountInfo() throws Exception {

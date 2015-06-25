@@ -43,7 +43,7 @@ public class GitkitVerifierManager implements VerifierProvider {
   private final Lock lock = new ReentrantLock();
 
   private static final Logger log = Logger.getLogger(GitkitVerifierManager.class.getName());
-  private final RpcHelper rpcHelper;
+  protected final RpcHelper rpcHelper;
   private final String serverApiKey;
   private Map<String, GitkitTokenVerifier> verifiers = Maps.newHashMap();
 
@@ -71,7 +71,7 @@ public class GitkitVerifierManager implements VerifierProvider {
 
   private void initVerifiers() {
     try {
-      Map<String, String> certs = parseCertsResponse(rpcHelper.downloadCerts(serverApiKey));
+      Map<String, String> certs = parseCertsResponse(getCerts());
       verifiers.clear();
       for (String kid : certs.keySet()) {
         verifiers.put(kid, new GitkitTokenVerifier(certs.get(kid)));
@@ -81,6 +81,10 @@ public class GitkitVerifierManager implements VerifierProvider {
     } catch (GitkitServerException e) {
       log.warning("unable to find token verifier: " + e.getMessage());
     }
+  }
+
+  protected String getCerts() throws IOException {
+    return rpcHelper.downloadCerts(serverApiKey);
   }
 
   @VisibleForTesting
